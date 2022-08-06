@@ -16,20 +16,6 @@ using namespace std;
 string command_line = "";
 map<string, string> alias_map;
 
-void init_BRshell()
-{
-    clear();
-    printf("\n\n\n\n******************"
-        "************************");
-    printf("\n\n\n\t**** Welcome to BRshell ****");
-    printf("\n\n\t- By Fernanda Macedo - ");
-    printf("\n\n\n\n*******************"
-        "***********************");
-    char* username = getenv("USER");
-    printf("\n\n\nUSER is: @%s", username);
-    printf("\n");
-}
-
 string current_dir()
 {
 	char cwd[1024];
@@ -41,6 +27,15 @@ string current_user()
 {
   string username = getenv("USER");
   return username;
+}
+
+void welcome_message()
+{
+    cout << "\n******************************************" << endl;
+    cout << "\n\n\t**** Welcome to BRshell ****" << endl;
+    cout << "\n\t- By Fernanda Macedo - " << endl;
+    cout << "\n\n******************************************" << endl;
+    cout << "\nCurrent user: @" << current_user() << "\n" << endl;
 }
 
 void read_input()
@@ -130,10 +125,6 @@ int command_line_process(string command_line)
 {
     // processa a linha de comando (string)
     
-    // se pah é aqui que faz sentido chamar read_BRshrc_profile() e read_BRshrc()
-
-
-
     return 0;
 }
 
@@ -150,28 +141,30 @@ int command_line_execution(string command_line)
     return 0;
 }
 
-// se o usuario digitar ver eu preciso executar essa funcao que mostra a versao
 void show_version()
 {
-    cout << "BRshell - Version: 1.0 - Updated at July 28, 2022 - Author: Fernanda Macedo de Sousa." << endl;
+    cout << "\n******************************************" << endl;
+    cout << "\n\n\t**** BRshell ****\n" << endl;
+    cout << "\t - Version: 1.0" << endl;
+    cout << "\t - Updated at: August 6, 2022" << endl;
+    cout << "\t - Author: Fernanda Macedo de Sousa" << endl;
+    cout << "\n\n******************************************\n" << endl;
 }
-
 
 int main()
 {
-    init_BRshell();
+    welcome_message();
     // read_config_paths(); 
     read_aliases();
 
-    // while (command_line != "exit")
-    // {
-    //     read_input();
+    while (command_line != "exit")
+    {
+        read_input();
         
-    //     command_line_process(command_line);
+        command_line_process(command_line);
 
-    //     command_line_execution(command_line);
-        
-    // }
+        command_line_execution(command_line);
+    }
  
     return 0;
 }
