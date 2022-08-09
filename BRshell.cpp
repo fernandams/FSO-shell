@@ -121,12 +121,12 @@ void read_aliases()
 
 void show_version()
 {
-    cout << "\n******************************************" << endl;
+    cout << "\n***************************************************" << endl;
     cout << "\n\n\t**** BRshell ****\n" << endl;
     cout << "\t - Version: 1.0" << endl;
     cout << "\t - Updated at: August 6, 2022" << endl;
     cout << "\t - Author: Fernanda Macedo de Sousa" << endl;
-    cout << "\n\n******************************************\n" << endl;
+    cout << "\n\n***************************************************\n" << endl;
 }
 
 void show_history(){

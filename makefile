@@ -1,3 +1,3 @@
 all:
-	g++ BRshell.cpp -o main.out -Wall
-	./main.out
+	g++ BRshell.cpp -o main -Wall
+	./main
