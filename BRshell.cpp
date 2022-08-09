@@ -188,7 +188,7 @@ int main()
         
         // command_line_process(command_line);
 
-        // command_line_execution(command_line);
+        command_line_execution(command_line);
     }
  
     return 0;
