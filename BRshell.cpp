@@ -10,11 +10,14 @@
 #include <fstream> 
 #include <map>
 #include <vector>
+#include <deque>
 using namespace std;
 
 string command_line = "";
 map<string, string> alias_map;
-vector<string> parsed_commands;
+vector<string> g_paths;
+deque<string> history;
+// vector<string> parsed_commands;
 
 string current_dir()
 {
@@ -38,11 +41,28 @@ void welcome_message()
     cout << "\nCurrent user: @" << current_user() << "\n" << endl;
 }
 
+
+void add_history(string command)
+{
+  if (command == "historico")
+    return;
+  
+  if (command.empty())
+    return;
+
+ history.push_front(command);
+  
+  if (history.size() > 10)
+  {
+    history.pop_back();
+  }
+}
+
 void read_input()
 {
     cout << "BRsh-" << current_user() << "-" << current_dir() << "-> ";  
     getline(cin, command_line);
-
+    add_history(command_line);
 }
 
 vector<string> read_file_lines(string file_BRsh)
@@ -81,12 +101,27 @@ string string_split(string &text, string splitter)
     return "";
 }
 
-// funcao para ler o arquivo com os paths executaveis (preciso saber qual e o path para usar na funcao que executa o comando que o usuario quer)
 void read_config_paths()
 {
     vector<string> profile_lines = read_file_lines(".BRbshrc_profile");
-    // ler o arquivo e quebrar a string em um vetor de paths ["bin/ls", "bin/ps", .... ]
     
+    for (unsigned int i = 0; i < profile_lines.size(); i++)
+    {
+        string paths = profile_lines[i].replace(0, 5, "");
+
+        while (paths.find(";") != string::npos)
+        {
+            string path = string_split(paths, ";");
+            if (path != ""){
+                g_paths.push_back(path);
+            }
+        }
+    }
+    // for (unsigned int i = 0; i < g_paths.size(); i++)
+    // {
+    //     cout << "G Paths:\n" << g_paths[i] << endl;  
+    // }
+
 }
 
 void read_aliases()
@@ -95,19 +130,17 @@ void read_aliases()
   
     for (int i = 0; i < 13; i++) 
     {
-        if (alias_lines[i].find("alias ") != string::npos) 
-        {
-            string new_command = alias_lines[i].substr(6, alias_lines[i].size()-6);            
-            string command = string_split(new_command, " ");
-           
-            new_command.erase(new_command.begin());
-            new_command.erase(new_command.end()-1);
-            command.erase(command.begin());
-            command.erase(command.end()-1);
-    
-            alias_map.insert(pair<string, string>(new_command,command));
-        }
+        string new_command = alias_lines[i].replace(0, 6, "");            
+        string command = string_split(new_command, " ");
+  
+        command.replace(0, 1, ""); 
+        command.replace(command.size()-1, 1,""); 
+        new_command.replace(0, 1, ""); 
+        new_command.replace(new_command.size()-1, 1,""); 
+     
+        alias_map.insert(pair<string, string>(new_command,command));
     }
+    
     // map<string, string>::iterator it;
 
     // for (it = alias_map.begin(); it != alias_map.end(); it++)
@@ -129,10 +162,6 @@ void show_version()
     cout << "\n\n***************************************************\n" << endl;
 }
 
-void show_history(){
-	cout << "\no historico sera impresso aqui\n" << endl;
-}
-
 void command_line_process(string command_line) 
 { // le a linha de comando e faz o parsing dos comandos colocando em um vetor
 	
@@ -146,7 +175,42 @@ void command_line_process(string command_line)
 
 }
 
-int command_line_execution(string command_line)
+void show_history()
+{
+    if (history.empty())
+        return;
+
+    cout << endl;
+
+    for(unsigned i = 0; i < history.size(); i++){
+        cout << i + 1 << "  " << history[i] << endl;
+    }
+
+    cout << endl;
+}
+
+void execute_single(string command_executed)
+{
+    int pid = fork();
+    if (pid == 0){ // processo filho
+        char *args_formated[3];
+        args_formated[0] = const_cast<char *>("");
+        args_formated[1] = NULL;
+        args_formated[2] = NULL;
+
+        for(unsigned i = 0; i < g_paths.size(); i++){
+            string cmd_path = g_paths[i] + command_executed;
+            args_formated[0] = const_cast<char *>(cmd_path.c_str());
+            
+            execv(cmd_path.c_str(), args_formated);           
+        }
+        
+    }else{ // processo pai
+        waitpid(pid, NULL, 0);
+    }
+}
+
+int command_line_execution()
 {
 	string command_executed = command_line;
    
@@ -156,8 +220,12 @@ int command_line_execution(string command_line)
 			show_version();
 		}else if(command_executed == "historico"){
 			show_history();
-		}
-
+		}else if(command_executed == "cd"){
+            // if (args.size() >= 1)
+            //     chdir(args[0].c_str());
+        }else{
+            execute_single(command_executed);
+        }
 	}
 
 	// executa a linha de comando (de acordo com o path do comando, apos comando ser identificado a partir do alias lido )
@@ -179,16 +247,13 @@ int command_line_execution(string command_line)
 int main()
 {
     welcome_message();
-    // read_config_paths(); 
+    read_config_paths(); 
     read_aliases();
 
     while (command_line != "exit")
     {
         read_input();
-        
-        // command_line_process(command_line);
-
-        command_line_execution(command_line);
+        command_line_execution();
     }
  
     return 0;
