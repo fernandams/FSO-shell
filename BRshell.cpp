@@ -162,19 +162,6 @@ void show_version()
     cout << "\n\n***************************************************\n" << endl;
 }
 
-void command_line_process(string command_line) 
-{ // le a linha de comando e faz o parsing dos comandos colocando em um vetor
-	
-	// processa a string:
-	// parsing -> divisão de comandos em palavras e strings individuais (Um comando consiste de um nome do comando seguido de um ou mais argumentos. )
-    //  cmdo_name arg[1] arg[2] ... arg[n] -> ex: ps -elf
-
-	// verificar se ha pipes (Ex: ps -elf | grep user | more)
-	// verificar se & aparece no final da linha -> para fazer tratamento de comandos em background
-	// verificar se é o caso de redirecionador de comandos -> lidar com leitura e escrita em arquivos
-
-}
-
 void show_history()
 {
     if (history.empty())
@@ -189,8 +176,17 @@ void show_history()
     cout << endl;
 }
 
+string get_aliases(string alias)
+{
+    if (alias_map.count(alias) > 0)
+        return alias_map[alias];
+    return alias;
+}
+
 void execute_single(string command_executed)
 {
+    string cmd_alias = get_aliases(command_executed);
+
     int pid = fork();
     if (pid == 0){ // processo filho
         char *args_formated[3];
@@ -199,18 +195,20 @@ void execute_single(string command_executed)
         args_formated[2] = NULL;
 
         for(unsigned i = 0; i < g_paths.size(); i++){
-            string cmd_path = g_paths[i] + command_executed;
+            string cmd_path = g_paths[i] + cmd_alias;
             args_formated[0] = const_cast<char *>(cmd_path.c_str());
             
             execv(cmd_path.c_str(), args_formated);           
         }
-        
+        cout << "Não achei o comando: " << cmd_alias << endl;
+        exit(0);
+
     }else{ // processo pai
         waitpid(pid, NULL, 0);
     }
 }
 
-int command_line_execution()
+void command_line_execution()
 {
 	string command_executed = command_line;
    
@@ -227,21 +225,6 @@ int command_line_execution()
             execute_single(command_executed);
         }
 	}
-
-	// executa a linha de comando (de acordo com o path do comando, apos comando ser identificado a partir do alias lido )
-    // exemplo:
-    // char *my_program[3] = {"/bin/ls", "-l",NULL};
-    // execv(my_program[0],my_program);
-    // printf("Cannot execute the command.\n");
-    // return 0;
-
-	// tratamento de pipes, se houver
-	// tratamento de comandos em background (se houver):
-	//  o BRsh deve criar o processo filho e iniciar sua execução e não esperar o término para aceitar um novo comando. Quando o comando em background for iniciado, ele deve imprimir uma mensagem: (...); Quando o processo em background termina, ele deve imprimir uma linha antes do próximo prompt (...) onde n é um número único gerado pelo BRsh. Ele funciona como um identificador para o programa executado em background. 
-
-	// Redirecionador de comandos ->  mudar o stdin e o stdout para arquivos de entrada e saida, respectivamente.
-
-    return 0;
 }
 
 int main()
