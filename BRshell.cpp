@@ -13,11 +13,12 @@
 #include <deque>
 using namespace std;
 
+void command_line_execution();
+
 string command_line = "";
 map<string, string> alias_map;
 vector<string> g_paths;
 deque<string> history;
-// vector<string> parsed_commands;
 
 string current_dir()
 {
@@ -117,11 +118,6 @@ void read_config_paths()
             }
         }
     }
-    // for (unsigned int i = 0; i < g_paths.size(); i++)
-    // {
-    //     cout << "G Paths:\n" << g_paths[i] << endl;  
-    // }
-
 }
 
 void read_aliases()
@@ -140,16 +136,6 @@ void read_aliases()
      
         alias_map.insert(pair<string, string>(new_command,command));
     }
-    
-    // map<string, string>::iterator it;
-
-    // for (it = alias_map.begin(); it != alias_map.end(); it++)
-    // {
-    //     std::cout << it->first    // string (key)
-    //             << ':'
-    //             << it->second   // string's value 
-    //             << std::endl;
-    // }
 }
 
 void show_version()
@@ -162,18 +148,33 @@ void show_version()
     cout << "\n\n***************************************************\n" << endl;
 }
 
-void show_history()
+void show_history(vector<string> args)
 {
-    if (history.empty())
-        return;
+    if(!args.empty()){
+        unsigned arg_history = stoi(args[0]);
+        if(arg_history <= 0 || arg_history >= history.size()){ 
+            history.pop_front();
+            cout << "Comando fora do intervalo do historico" << endl;
+            return;
+        }
+        command_line = history[arg_history];
+        history.pop_front();
+        add_history(command_line);
+        command_line_execution();
 
-    cout << endl;
+    }else{
+    
+        if(history.empty())
+            return;
 
-    for(unsigned i = 0; i < history.size(); i++){
-        cout << i + 1 << "  " << history[i] << endl;
+        cout << endl;
+
+        for(unsigned i = 0; i < history.size(); i++){
+            cout << i + 1 << "  " << history[i] << endl;
+        }
+
+        cout << endl;
     }
-
-    cout << endl;
 }
 
 string get_aliases(string alias)
@@ -183,16 +184,41 @@ string get_aliases(string alias)
     return alias;
 }
 
-void execute_single(string command_executed)
+vector<string> get_args(string command_executed)
+{
+    vector<string> arguments = vector<string>();
+    
+    if(command_executed.find(" ") == string::npos)
+        return arguments;
+
+    string_split(command_executed, " ");
+
+    while(command_executed.find(" ") != string::npos)
+    {
+        string string_left = string_split(command_executed, " "); 
+        arguments.push_back(string_left); 
+    }
+
+    if(!command_executed.empty())
+        arguments.push_back(command_executed);
+
+    return arguments;
+}
+
+void execute_single(string command_executed, vector<string> args)
 {
     string cmd_alias = get_aliases(command_executed);
 
     int pid = fork();
     if (pid == 0){ // processo filho
-        char *args_formated[3];
-        args_formated[0] = const_cast<char *>("");
-        args_formated[1] = NULL;
-        args_formated[2] = NULL;
+        char *args_formated[args.size() + 2];
+        string str_args = "";
+        args_formated[0] = const_cast<char *>(""); 
+
+        for (unsigned i = 0; i < args.size(); i++){
+            args_formated[i + 1] = const_cast<char *>(args[i].c_str());
+        }
+        args_formated[args.size() + 1] = NULL;
 
         for(unsigned i = 0; i < g_paths.size(); i++){
             string cmd_path = g_paths[i] + cmd_alias;
@@ -211,18 +237,22 @@ void execute_single(string command_executed)
 void command_line_execution()
 {
 	string command_executed = command_line;
-   
+
 	if (command_executed != "" && command_executed != "exit")
     {
+        vector<string> arguments = get_args(command_executed);
+        if(command_executed.find(" ") != string::npos)
+            command_executed = string_split(command_executed, " ");
+
 		if (command_executed == "ver"){
 			show_version();
 		}else if(command_executed == "historico"){
-			show_history();
+			show_history(arguments);
 		}else if(command_executed == "cd"){
-            // if (args.size() >= 1)
-            //     chdir(args[0].c_str());
+            if (arguments.size() >= 1)
+                chdir(arguments[0].c_str());
         }else{
-            execute_single(command_executed);
+            execute_single(command_executed, arguments);
         }
 	}
 }
