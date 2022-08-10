@@ -115,7 +115,7 @@ O BRsh deve com o comando `ver`, implementado internamente (ou seja, não é um 
 
 ## 8 - Gerenciamento de Recursos
 
-O BRsh deve liberar a memória e os recursos que não precise mais usar. Os [processos](https://aprender3.unb.br/mod/resource/view.php?id=748814) filhos criados devem fazer a chamada `wait` de forma apropriada de forma a liberar os recursos após o seu fim. 
+O BRsh deve liberar a memória e os recursos que não precise mais usar. Os processos filhos criados devem fazer a chamada `wait` de forma apropriada de forma a liberar os recursos após o seu fim. 
 
 ## 9 - Tradução para o português
 
@@ -221,7 +221,7 @@ exemplo
 - [ ] Comandos em background
 - [ ] Redirecionador de comandos
 - [x] Comando ver
-- [ ] Gerenciamento de recursos
+- [x] Gerenciamento de recursos
 - [x] Tradução para o português
 - [ ] Processamento de comandos e programas em lote
 
